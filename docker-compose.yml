@@ -1,0 +1,20 @@
+services:
+  postgresql:
+    image: postgres
+    container_name: database
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: filmio
+      POSTGRES_PASSWORD: filmio
+      POSTGRES_DB: filmio
+    ports:
+      - "5432:5432"
+    volumes:
+      - filmio:/var/lib/postgresql/data
+
+networks:
+  filmio-network:
+    driver: bridge
+
+volumes:
+  filmio:

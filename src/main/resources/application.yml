@@ -1,0 +1,19 @@
+
+spring:
+  application:
+    name: filmio
+  datasource:
+    url: jdbc:postgresql://localhost:5432/filmio?currentSchema=filmio
+    username: filmio
+    password: filmio
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  flyway:
+    enabled: true
+    default-schema: filmio
+    locations: classpath:/db/migration/postgres
+    user: filmio
+    password: filmio
