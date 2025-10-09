@@ -1,7 +1,7 @@
 services:
   postgresql:
     image: postgres
-    container_name: database
+    container_name: postgresdb
     restart: unless-stopped
     environment:
       POSTGRES_USER: filmio

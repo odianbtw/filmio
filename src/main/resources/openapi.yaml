@@ -1,0 +1,284 @@
+openapi: 3.0.0
+
+info:
+  title: Filmio
+  description: This is OpenAPI specification for the Filmio Project
+  version: 1.0.0
+servers:
+  - url: 'https://localhost/api/v1'
+tags:
+  - name: Users
+  - name: Auth
+paths:
+  /v1/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user account
+      operationId: registerNewAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserAccountRequestV1'
+
+      responses:
+        '201':
+          description: User account created successfully
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '409':
+          $ref: '#/components/responses/ConflictResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+  /v1/auth/verify:
+    get:
+      tags:
+        - Auth
+      summary: Verify registred account
+      operationId: verifyAccount
+      parameters:
+        - name: token
+          in: query
+          description: Verification token
+          required: true
+          schema:
+            type: string
+            example: kmzj-4t7jD5gIXYG_-nSaNEebePYr7BReuKD5XH8PNQ
+      responses:
+        '204':
+          description: Successfully verified account
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '404':
+          $ref: '#/components/responses/NotFoundResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+  /v1/auth/reset:
+    post:
+      tags:
+        - Auth
+      summary: Create reset password token
+      operationId: crateResetPasswordToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePasswordResetTokenRequestV1'
+      responses:
+        '200':
+          description: Email with reset token was send to email
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+    put:
+      tags:
+        - Auth
+      summary: Reset password
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestV1'
+      responses:
+        '204':
+          description: Successfully verified account
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '404':
+          $ref: '#/components/responses/NotFoundResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+  /v1/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestV1'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseV1'
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '404':
+          $ref: '#/components/responses/NotFoundResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+  /v1/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Generate new access token via refresh token
+      operationId: refresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateAccessTokenRequestV1'
+      responses:
+        '200':
+          description: Successfully generated new access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateAccessTokenResponseV1'
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '403':
+          $ref: '#/components/responses/AccessForbiddenResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+components:
+  schemas:
+    GenerateAccessTokenResponseV1:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+    GenerateAccessTokenRequestV1:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+    LoginResponseV1:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+    LoginRequestV1:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: jack_jackson
+        password:
+          type: string
+          format: password
+          example: somePas8w0rd_
+          minLength: 8
+          maxLength: 128
+    CreatePasswordResetTokenRequestV1:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          example: jackjackson@gmail.com
+
+    PasswordResetRequestV1:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+          example: kmzj-4t7jD5gIXYG_-nSaNEebePYr7BReuKD5XH8PNQ
+        password:
+          type: string
+          format: password
+          description: New password for the account
+          example: somePas8w0rd_
+          minLength: 8
+          maxLength: 128
+
+    DefaultErrorResponseV1:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: Something not found with this id
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-10-02T14:30:00Z
+    CreateUserAccountRequestV1:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          example: jack_jackson
+        email:
+          type: string
+          format: email
+          example: jackjackson@gmail.com
+        password:
+          type: string
+          format: password
+          example: somePas8w0rd_
+          minLength: 8
+          maxLength: 128
+
+  responses:
+    AccessForbiddenResponseV1:
+      description: Access forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultErrorResponseV1'
+          example:
+            message: Invalid refresh token
+    NotFoundResponseV1:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultErrorResponseV1'
+          example:
+            message: Film with this id not found
+    BadRequestResponseV1:
+      description: Request has validation erros
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultErrorResponseV1'
+          example:
+            message: Name cannot be null
+    ConflictResponseV1:
+      description: Some confilct occured on the server. (Name already taken and etc.)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultErrorResponseV1'
+          example:
+            message: User with this username already exist
+    TooManyRequestsResponseV1:
+      description: Too many requests.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultErrorResponseV1'
+          example:
+            message: Too many requests. Please address this to the support.
