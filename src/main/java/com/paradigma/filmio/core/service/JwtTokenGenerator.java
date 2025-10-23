@@ -2,6 +2,7 @@ package com.paradigma.filmio.core.service;
 
 import com.paradigma.filmio.core.domain.model.UserAccount;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -29,13 +30,12 @@ public class JwtTokenGenerator implements AccessTokenGenerator {
     private String generate(UserAccount userAccount, long expirationIn) {
         final Instant now = Instant.now();
         final Instant expiration = now.plusMillis(expirationIn);
-        final var claims = Map.of("role", userAccount.getRole().toString());
         return Jwts.builder()
-                .setSubject(userAccount.getUsername())
-                .setClaims(claims)
+                .setSubject(String.valueOf(userAccount.getId()))
+                .claim("role", userAccount.getRole().toString())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiration))
-                .signWith(secret)
+                .signWith(secret,  SignatureAlgorithm.HS256)
                 .compact();
     }
 }

@@ -139,8 +139,140 @@ paths:
           $ref: '#/components/responses/AccessForbiddenResponseV1'
         '429':
           $ref: '#/components/responses/TooManyRequestsResponseV1'
+  /v1/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user info by id
+      operationId: findUserById
+      parameters:
+        - name: id
+          in: path
+          description: User's id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a7edff5-7fec-40bf-879f-ea831565cedc
+      responses:
+        '200':
+          description: Successfully found user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRepresentationV1'
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '404':
+          $ref: '#/components/responses/NotFoundResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+    put:
+      tags:
+        - Users
+      summary: Update user
+      operationId: updateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserV1'
+      parameters:
+        - name: id
+          in: path
+          description: User's id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a7edff5-7fec-40bf-879f-ea831565cedc
+      responses:
+        '204':
+          description: Successfully updated user
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '409':
+          $ref: '#/components/responses/ConflictResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
 components:
   schemas:
+    UserEssentialMediaV1:
+      type: object
+      properties:
+        avatarUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/avatars/123.jpg
+        backdropUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/avatars/123.jpg
+    UserSocialStatisticsV1:
+      type: object
+      properties:
+        followers:
+          type: integer
+          format: int32
+          example: 41567
+        following:
+          type: integer
+          format: int32
+          example: 213
+
+    CountryRepresentationV1:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 2
+        name:
+          type: string
+          example: USA
+
+    UserRepresentationV1:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3e68d61c-c211-472c-aa4d-677395d426e6
+        username:
+          type: string
+          example: jack_jackson
+        description:
+          type: string
+          example: Hey, I'm Jack Jackson from Miami. Huge film fan.
+        country:
+          $ref: '#/components/schemas/CountryRepresentationV1'
+        medias:
+          $ref: '#/components/schemas/UserEssentialMediaV1'
+
+    UpdateUserV1:
+      type: object
+      required:
+        - id
+        - username
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3e68d61c-c211-472c-aa4d-677395d426e6
+        username:
+          type: string
+          example: jack_jackson
+        description:
+          type: string
+          example: Hey, I'm Jack Jackson from Miami. Huge film fan.
+        countryId:
+          type: integer
+          format: int32
+          example: 1
+        medias:
+          $ref: '#/components/schemas/UserEssentialMediaV1'
+
+
     GenerateAccessTokenResponseV1:
       type: object
       required:
@@ -189,7 +321,6 @@ components:
         email:
           type: string
           example: jackjackson@gmail.com
-
     PasswordResetRequestV1:
       type: object
       required:
@@ -206,7 +337,6 @@ components:
           example: somePas8w0rd_
           minLength: 8
           maxLength: 128
-
     DefaultErrorResponseV1:
       type: object
       properties:
@@ -267,7 +397,7 @@ components:
           example:
             message: Name cannot be null
     ConflictResponseV1:
-      description: Some confilct occured on the server. (Name already taken and etc.)
+      description: Some conflict occurred on the server. (Name already taken and etc.)
       content:
         application/json:
           schema:

@@ -1,9 +1,14 @@
 package com.paradigma.filmio.dao.postgres.dao;
 
+import com.paradigma.filmio.core.domain.model.User;
 import com.paradigma.filmio.core.domain.model.UserAccount;
 import com.paradigma.filmio.core.port.out.UserDao;
 import com.paradigma.filmio.dao.postgres.mapper.UserEntityMapper;
+import com.paradigma.filmio.dao.postgres.model.UserAccountEntity;
+import com.paradigma.filmio.dao.postgres.model.UserEntity;
+import com.paradigma.filmio.dao.postgres.model.UserEssentialMedia;
 import com.paradigma.filmio.dao.postgres.spring.repository.UserAccountRepository;
+import com.paradigma.filmio.dao.postgres.spring.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
@@ -17,6 +22,7 @@ import java.util.UUID;
 public class DefaultUserDao implements UserDao {
 
     private final UserAccountRepository userAccountRepository;
+    private final UserRepository userRepository;
     private final UserEntityMapper userEntityMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -30,14 +36,40 @@ public class DefaultUserDao implements UserDao {
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
         final var saved = userAccountRepository.save(entity);
+        createUserDetail(saved);
         return userEntityMapper.toUserAccount(saved);
     }
 
     @Override
-    public Optional<UserAccount> findById(UUID id) {
-        final var user = userAccountRepository.findById(id);
-        return user.map(userEntityMapper::toUserAccount);
+    public User update(User user) {
+        return null;
     }
+
+    @Override
+    public Optional<User> findById(UUID id) {
+        final var user = userRepository.findByIdWithMedias(id);
+        return user.map(userEntityMapper::toUser);
+    }
+
+
+    private void createUserDetail(UserAccountEntity userAccount) {
+        final var user = UserEntity.builder()
+                .userAccount(userAccount)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+        final var saved = userRepository.save(user);
+        final var essentialMedia = new UserEssentialMedia();
+        essentialMedia.setUser(saved);
+        saved.setUserEssentialMedia(essentialMedia);
+    }
+
+
+//    @Override
+//    public Optional<UserAccount> findById(UUID id) {
+//        final var user = userAccountRepository.findById(id);
+//        return user.map(userEntityMapper::toUserAccount);
+//    }
 
     @Override
     public Optional<UserAccount> findByEmail(String email) {
@@ -45,11 +77,6 @@ public class DefaultUserDao implements UserDao {
         return entity.map(userEntityMapper::toUserAccount);
     }
 
-    @Override
-    public void update(UserAccount userAccount) {
-        final var entity = userEntityMapper.toUserAccountEntity(userAccount);
-        userAccountRepository.save(entity);
-    }
 
     @Override
     public void changeUserPassword(UUID id, String newPassword) {
@@ -69,4 +96,5 @@ public class DefaultUserDao implements UserDao {
             return Optional.empty();
         }
     }
+
 }

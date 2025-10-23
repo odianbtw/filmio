@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,13 +34,24 @@ public class JwtAuthenticationUtil implements AuthenticationTokenUtil {
     public AccessToken refreshToken(String refreshToken) {
         if (isValid(refreshToken)) {
             final var user = UserAccount.builder()
-                    .username(getUsername(refreshToken))
+                    .id(getUserId(refreshToken))
                     .role(getUserRole(refreshToken))
                     .build();
             final var newAccessToken = tokenGenerator.generateAccessToken(user);
             return new AccessToken(newAccessToken, refreshToken);
         }
         throw new AccessForbiddenException("Refresh token is invalid.");
+    }
+
+    @Override
+    public UserAccount getUserAccountFromToken(String token) {
+        if(isValid(token)) {
+            final var userAccount = new UserAccount();
+            userAccount.setId(getUserId(token));
+            userAccount.setRole(getUserRole(token));
+            return userAccount;
+        }
+        throw new AccessForbiddenException("Authentication token is invalid.");
     }
 
     private Claims getClaims(String token) {
@@ -54,9 +66,9 @@ public class JwtAuthenticationUtil implements AuthenticationTokenUtil {
         }
     }
 
-    private String getUsername(String token) {
+    private UUID getUserId(String token) {
         Claims claims = getClaims(token);
-        return claims != null ? claims.getSubject() : null;
+        return claims != null ? UUID.fromString(claims.getSubject()) : null;
     }
 
     private UserRole getUserRole(String token) {

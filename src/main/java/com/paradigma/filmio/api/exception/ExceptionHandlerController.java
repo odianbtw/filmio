@@ -1,4 +1,4 @@
-package com.paradigma.filmio.api.controller;
+package com.paradigma.filmio.api.exception;
 
 
 import com.paradigma.filmio.api.model.DefaultErrorResponseV1;
@@ -42,6 +42,20 @@ public class ExceptionHandlerController {
         response.setTimestamp(OffsetDateTime.from(Instant.now()));
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    private ResponseEntity<DefaultErrorResponseV1> badRequestException(
+            BadRequestException ex
+    ) {
+        log.error(ex.getMessage(), ex);
+        final var response = new DefaultErrorResponseV1();
+        response.setMessage(ex.getMessage());
+        response.setStatusCode(400);
+        response.setTimestamp(OffsetDateTime.from(Instant.now()));
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(response);
     }
 }

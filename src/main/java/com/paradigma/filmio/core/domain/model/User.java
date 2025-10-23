@@ -8,25 +8,27 @@ import lombok.NoArgsConstructor;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDetail {
-    private UserAccount userAccount;
-    private Country country;
+public class User {
+    private UUID id;
+    private String username;
     private String description;
-    private Set<Media> medias;
+    private Country country;
+    private Set<Media> media;
 
     public Optional<Media> getAvatar () {
-        return medias.stream()
+        return media.stream()
                 .filter(m -> Objects.equals(m.getMediaType(), MediaType.AVATAR))
                 .findAny();
     }
 
     public Optional<Media> getBackdrop () {
-        return medias.stream()
+        return media.stream()
                 .filter(m -> Objects.equals(m.getMediaType(), MediaType.BACKDROP))
                 .findAny();
     }
