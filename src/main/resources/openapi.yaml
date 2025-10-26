@@ -191,10 +191,64 @@ paths:
           description: Successfully updated user
         '400':
           $ref: '#/components/responses/BadRequestResponseV1'
+        '404':
+          $ref: '#/components/responses/NotFoundResponseV1'
         '409':
           $ref: '#/components/responses/ConflictResponseV1'
         '429':
           $ref: '#/components/responses/TooManyRequestsResponseV1'
+  /v1/users/{id}/statistics:
+    get:
+      tags:
+        - Users
+      summary: Get user social statistics by id
+      operationId: findUserStatisticsById
+      parameters:
+        - name: id
+          in: path
+          description: User's id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a7edff5-7fec-40bf-879f-ea831565cedc
+      responses:
+        '200':
+          description: Successfully found user's statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSocialStatisticsV1'
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '404':
+          $ref: '#/components/responses/NotFoundResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+  /v1/users:
+    get:
+      tags:
+        - Users
+      summary: Get user social statistics by id
+      operationId: Get user followers by id
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/PageModel'
+      responses:
+        '200':
+          description: Successfully found user's statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUsersV1'
+        '400':
+          $ref: '#/components/responses/BadRequestResponseV1'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponseV1'
+
 components:
   schemas:
     UserEssentialMediaV1:
@@ -208,17 +262,100 @@ components:
           type: string
           format: uri
           example: https://cdn.example.com/avatars/123.jpg
+    UserAvatarMediaV1:
+      type: object
+      properties:
+        avatarUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/avatars/123.jpg
     UserSocialStatisticsV1:
       type: object
       properties:
         followers:
           type: integer
-          format: int32
+          format: int64
           example: 41567
         following:
           type: integer
-          format: int32
+          format: int64
           example: 213
+    PageModel:
+      description: Pageable query parameters
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1000
+          description: Zero-based page number, must not be negative
+          default: 0
+          example: 0
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          description: The size of the page to be returned, must be greater than 0
+          default: 20
+          example: 20
+        order:
+          type: string
+          enum:
+            - ASC
+            - DESC
+          default: ASC
+          example: ASC
+        sort:
+          type: string
+          example: username
+
+    PageRepresentation:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          format: int32
+          description: Page number
+          example: 5
+        pageSize:
+          type: integer
+          format: int32
+          description: Amount of elements returned
+          example: 5
+        totalElements:
+          type: integer
+          format: int64
+          description: Total amount of elements
+          example: 50
+        totalPages:
+          type: integer
+          format: int32
+          description: Amount of pages
+          example: 10
+    GetUsersV1:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserItemRepresentationV1'
+        page:
+          $ref: '#/components/schemas/PageRepresentation'
+
+    UserItemRepresentationV1:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3e68d61c-c211-472c-aa4d-677395d426e6
+        username:
+          type: string
+          example: jack_jackson
+        media:
+          $ref: '#/components/schemas/UserAvatarMediaV1'
 
     CountryRepresentationV1:
       type: object

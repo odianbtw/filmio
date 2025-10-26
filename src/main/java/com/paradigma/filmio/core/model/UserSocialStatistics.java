@@ -1,7 +1,12 @@
 package com.paradigma.filmio.core.model;
 
-public record UserSocialStatistics(
-        Integer followers,
-        Integer following
-) implements SocialStatistics{
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+
+@Data
+@AllArgsConstructor
+public class UserSocialStatistics implements SocialStatistics{
+    private long followers;
+    private long following;
 }

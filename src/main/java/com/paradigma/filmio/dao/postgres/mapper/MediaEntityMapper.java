@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 @Mapper(componentModel = "spring")
 public interface MediaEntityMapper {
     Media toMedia(MediaEntity media);
+    MediaEntity toMediaEntity(Media media);
     default Set<Media> toMediaSet(UserEssentialMedia userEssentialMedia) {
         final var avatar = toMedia(userEssentialMedia.getAvatar());
         final var backdrop = toMedia(userEssentialMedia.getBackdrop());
@@ -20,4 +21,5 @@ public interface MediaEntityMapper {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
+
 }

@@ -2,11 +2,16 @@ package com.paradigma.filmio.dao.postgres.dao;
 
 import com.paradigma.filmio.core.domain.model.User;
 import com.paradigma.filmio.core.domain.model.UserAccount;
+import com.paradigma.filmio.core.exception.DataConflictException;
+import com.paradigma.filmio.core.exception.NotFoundException;
+import com.paradigma.filmio.core.model.UserSocialStatistics;
 import com.paradigma.filmio.core.port.out.UserDao;
+import com.paradigma.filmio.dao.postgres.mapper.MediaEntityMapper;
 import com.paradigma.filmio.dao.postgres.mapper.UserEntityMapper;
 import com.paradigma.filmio.dao.postgres.model.UserAccountEntity;
 import com.paradigma.filmio.dao.postgres.model.UserEntity;
 import com.paradigma.filmio.dao.postgres.model.UserEssentialMedia;
+import com.paradigma.filmio.dao.postgres.spring.repository.CountryRepository;
 import com.paradigma.filmio.dao.postgres.spring.repository.UserAccountRepository;
 import com.paradigma.filmio.dao.postgres.spring.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,12 +29,14 @@ public class DefaultUserDao implements UserDao {
 
     private final UserAccountRepository userAccountRepository;
     private final UserRepository userRepository;
-    private final UserEntityMapper userEntityMapper;
+    private final UserEntityMapper userMapper;
+    private final MediaEntityMapper mediaMapper;
+    private final CountryRepository countryRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserAccount create(UserAccount userAccount) {
-        final var entity = userEntityMapper.toUserAccountEntity(userAccount);
+        final var entity = userMapper.toUserAccountEntity(userAccount);
         final var encodedPassword = passwordEncoder.encode(
                 entity.getPassword()
         );
@@ -37,18 +45,38 @@ public class DefaultUserDao implements UserDao {
         entity.setUpdatedAt(Instant.now());
         final var saved = userAccountRepository.save(entity);
         createUserDetail(saved);
-        return userEntityMapper.toUserAccount(saved);
+        return userMapper.toUserAccount(saved);
     }
 
     @Override
-    public User update(User user) {
-        return null;
+    public void update(User user) {
+        final var userEntity = userRepository.findByIdWithMedias(user.getId())
+                .orElseThrow(() -> new NotFoundException("Cannot find user with provided id."));
+        userEntity.getUserAccount().setUsername(user.getUsername());
+        userEntity.setDescription(user.getDescription());
+        if (user.getCountry() != null) {
+            final var country = countryRepository.findById(user.getCountry().getId())
+                    .orElseThrow(() -> new DataConflictException("Provided country id doesn't exists."));
+            userEntity.setCountry(country);
+        }
+        userEntity.getUserEssentialMedia().setAvatar(
+                mediaMapper.toMediaEntity(user.getAvatar().orElse(null))
+        );
+        userEntity.getUserEssentialMedia().setBackdrop(
+                mediaMapper.toMediaEntity(user.getBackdrop().orElse(null))
+        );
+        userEntity.setUpdatedAt(Instant.now());
+    }
+
+    @Override
+    public UserSocialStatistics findStatisticsById(UUID id) {
+        return userRepository.findStatisticsById(id);
     }
 
     @Override
     public Optional<User> findById(UUID id) {
         final var user = userRepository.findByIdWithMedias(id);
-        return user.map(userEntityMapper::toUser);
+        return user.map(userMapper::toUser);
     }
 
 
@@ -64,17 +92,10 @@ public class DefaultUserDao implements UserDao {
         saved.setUserEssentialMedia(essentialMedia);
     }
 
-
-//    @Override
-//    public Optional<UserAccount> findById(UUID id) {
-//        final var user = userAccountRepository.findById(id);
-//        return user.map(userEntityMapper::toUserAccount);
-//    }
-
     @Override
     public Optional<UserAccount> findByEmail(String email) {
         final var entity = userAccountRepository.findByEmail(email);
-        return entity.map(userEntityMapper::toUserAccount);
+        return entity.map(userMapper::toUserAccount);
     }
 
 
@@ -91,7 +112,7 @@ public class DefaultUserDao implements UserDao {
     public Optional<UserAccount> findByUsernameAndPassword(String username, String password) {
         final var user = userAccountRepository.findByUsername(username);
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
-            return user.map(userEntityMapper::toUserAccount);
+            return user.map(userMapper::toUserAccount);
         } else {
             return Optional.empty();
         }
